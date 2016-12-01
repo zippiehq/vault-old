@@ -25,7 +25,7 @@ Zipper Vault gives the end-user a digital identity, stored in their devices' web
 
 - And is as easy as including a JavaScript library to a website.
 
-Contributions to Zipper Vault requires accepting a Contributor License Agreement, see more here: XXXX
+Contributions to Zipper Vault requires accepting a Contributor License Agreement, see more here: https://contribute.zipperglobal.com/
 
 To build:
 
@@ -39,3 +39,4 @@ $ npm run www
 
 Open http://localhost:8000/test/test.html and view output in console and
 check out test.js.
+
