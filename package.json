@@ -1,0 +1,26 @@
+{
+  "name": "zipper-vault",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build-vault": "mkdir -p build/vault; cp -f vault-site/index.html build/vault; browserify vault-site/vault.js -d -o build/vault/bundle.js",
+    "build-test": "mkdir -p build/test; cp -f test-site/test.html build/test; browserify test-site/test.js -d -o build/test/test.built.js",
+    "www": "cd build; python -m SimpleHTTPServer",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "AGPLv3+HTML exception",
+  "dependencies": {
+    "bip39": "^2.2.0",
+    "bn.js": "^4.11.6",
+    "crypto": "0.0.3",
+    "eccrypto": "^1.0.3",
+    "secp256k1": "^3.2.2",
+    "sessionstorage": "0.0.1",
+    "store": "^1.3.20"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.1"
+  }
+}
