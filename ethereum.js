@@ -28,6 +28,12 @@ var vaultSecp256k1 = require ('./secp256k1.js');
 var authedForwarder = "0xf8260e2729e5f618005dc011a36d699bd2e53055";
 var pmg = "https://enclave.zipperglobal.com/pmg";
 
+/**
+ * Converts a secp256k1 signature in hex form into a Ethereum form v,r,s
+ * @param {{signature: String, recovery: Number} the signature to convert
+ * @return {{v: Number, r: String, s: String}}
+ */
+
 exports.toEthSig = function(sig) {
     var ret = {}
     ret.r = sig.signature.slice(0, 64)
@@ -35,6 +41,14 @@ exports.toEthSig = function(sig) {
     ret.v = sig.recovery + 27
     return ret
 }
+
+/**
+ * Converts a Ethereum style signature into secp256k1 form
+ * @param {Number} v
+ * @param {String} r
+ * @param {String} s
+ * @return {{String, Number}} secp256k1 signature
+ */
 
 exports.fromEcSig = function(v,r,s) {
     r = Buffer.from(r, 'hex');
@@ -47,15 +61,32 @@ exports.fromEcSig = function(v,r,s) {
     return { signature: signature.toString('hex'), recovery: recovery }
 }
 
+/** 
+ * Gets the particular Ethereum style address for the particular purpose and derivation
+ * @param {vault} the Vault module
+ * @param {String} the particular purpose, if normal, use 'auto'
+ * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @return {Promise} where resolve is the Ethereum style address
+ */
+ 
 exports.ethAddress = function(vault, purpose, derive) {
     return new Promise( 
         function (resolve, reject) {
-            vaultSecp256k1.keyInfo(vault, purpose, derive).then(function(pubkey) {
-                resolve(ethutil.bufferToHex(ethutil.pubToAddress("0x" + pubkey.slice(2))));
+            vaultSecp256k1.keyInfo(vault, purpose, derive).then(function(address) {
+                resolve(ethutil.bufferToHex(ethutil.pubToAddress("0x" + address.slice(2))));
             }); 
     });
 }
 
+/** 
+ * Signs the particular msgHash in hex form with the private key of particular purpoes and derivation
+ * @param {vault} the Vault module
+ * @param {String} The hash (32 bytes in hex form) to be signed
+ * @param {String} the particular purpose, if normal, use 'auto'
+ * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @return {Promise} where resolve is the Ethereum signature (v,r,s)
+*/ 
+ 
 exports.ecsign = function(vault, msgHash, purpose, derive) {
       return new Promise(
         function (resolve, reject) {
@@ -65,6 +96,16 @@ exports.ecsign = function(vault, msgHash, purpose, derive) {
         });
 }
 
+/** 
+ * Recovers the Ethereum address and public key of the particular Ethereum-style signature for a specific hash
+ * @param {vault} the Vault module
+ * @param {String} The hash (32 bytes in hex form) to be signed
+ * @param {Number} v
+ * @param {String} r
+ * @param {String} s
+ * @return {Promise} where the result is { ethAddress: Ethereum Address, pubkey: Public key }
+*/
+  
 exports.ecrecover = function(vault, msgHash, v, r, s)  {
      return new Promise(
          function (resolve, reject) {
@@ -76,6 +117,17 @@ exports.ecrecover = function(vault, msgHash, v, r, s)  {
      );
 }
 
+/**
+ * Send a transaction to a particular contract without paying ether
+ * @param {vault} the Vault module
+ * @param {String} the particular purpose, if normal, use 'auto'
+ * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @param {String} The Ethereum address of the smart contract to be called
+ * @param {String} calldata of the call. First argument MUST be equal to ethAddress(vault, purpose, derive) or it will fail
+ * @param {Boolean} if a event should be issued for the return value of the execution
+ * @return {Promise} where the resolve is the Ethereum blockchain transaction ID
+ */
+ 
 exports.sendAuthedTransaction = function(vault, purpose, derive, contract, calldata, careReturn)
 {
     return new Promise(
