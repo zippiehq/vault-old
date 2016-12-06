@@ -126,13 +126,15 @@ function handleSecureVaultMessage(event)
          if (!inited)
           return;
 
-         if ('sec256k1KSetupPurpose' in event.data)
+         if ('secp256k1SetupPurpose' in event.data)
          {
+              var callback = event.data.callback;
               var entropy = store.get('webseed');
               var seed2mnemonic = bip39.entropyToMnemonic(entropy);
               
-              var seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin + "purpose" + event.data.sec256k1KSetupPurpose.purpose);
-              apphdkey[event.data.sec256K1SetupPurpose.alias] = hdkey.fromMasterSeed(seed);
+              var seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin + "purpose" + event.data.secp256k1SetupPurpose.purpose);
+              apphdkey[event.data.secp256k1SetupPurpose.alias] = hdkey.fromMasterSeed(seed);
+              parent.postMessage({'callback' : callback}, event.origin);
          }
          // get the ethereum address for a particular sub-account
          else if ('secp256k1KeyInfo' in event.data)
@@ -140,9 +142,9 @@ function handleSecureVaultMessage(event)
              // key { purpose: 'auto', derive: 'm/0/0' }
              var callback = event.data.callback;
              // we use other children for other things for now
-             var hdkey = apphdkey[event.data.secp256k1KeyInfo.key.purpose].derive(
+             var ahdkey = apphdkey[event.data.secp256k1KeyInfo.key.purpose].derive(
                   event.data.secp256k1KeyInfo.key.derive);
-             var pubkey = secp256k1.publicKeyConvert(hdkey.publicKey, false);
+             var pubkey = secp256k1.publicKeyConvert(ahdkey.publicKey, false);
              // give back SEC1 form
              parent.postMessage({'callback' : callback, 'pubkey' : pubkey.toString('hex') }, event.origin);
          }
