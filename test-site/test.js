@@ -3,11 +3,16 @@ var vault = require('../index.js');
 var ethVault = require('../ethereum.js');
 var Web3 = require('web3');
 var web3 = new Web3();
+var secp256k1F = require('../secp256k1.js');
 
 var authedforwarderContract = web3.eth.contract([{"constant":false,"inputs":[{"name":"sig","type":"bytes4"}],"name":"whitelist","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_foo","type":"address"}],"name":"test","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_target","type":"address"},{"name":"_calldata","type":"bytes"},{"name":"_nonce","type":"uint256"},{"name":"_careReturn","type":"bool"},{"name":"_v","type":"uint8"},{"name":"_r","type":"bytes32"},{"name":"_s","type":"bytes32"}],"name":"callOtherContract32","outputs":[],"payable":false,"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_foo","type":"address"}],"name":"EcRecovered","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_foo","type":"address"}],"name":"Test","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"name":"_result","type":"bytes32"}],"name":"TransactionReturnValue32","type":"event"},{"anonymous":false,"inputs":[],"name":"TransactionDenied","type":"event"}]);
 var authedforwarder = authedforwarderContract.at("0xf8260e2729e5f618005dc011a36d699bd2e53055");
 
-vault.init({ "useOrigin" : true, "testing" : true }).then(function() { 
+vault.init({ "useOrigin" : true, "testing" : true  }).then(function() { 
+     secp256k1F.setupPurpose(vault, 'foo', 'bar').then(function() { 
+            console.log("BAR");
+            ethVault.ethAddress(vault, 'bar', 'm/0').then(function(pubkey) { console.log(" BAR " + pubkey); });
+       });     
      ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) { console.log(pubkey); });    
      ethVault.ethAddress(vault, 'auto', 'm/1').then(function(pubkey) { console.log(pubkey); });    
      ethVault.ethAddress(vault, 'auto', 'm/2').then(function(pubkey) { console.log(pubkey); });    

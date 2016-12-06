@@ -19,6 +19,14 @@
  * SOFTWARE.
 */
 
+exports.setupPurpose = function(vault, purpose, alias) {
+   return new Promise(function(resolve, reject) { 
+      vault.message({'secp256k1SetupPurpose' : { purpose: purpose, alias: alias }}).then(function(result) { 
+           resolve();
+      });
+   });
+}
+
 /** 
  * Get the public key for that particular purpose and derivation
  * @param {vault} the Vault module
