@@ -43,6 +43,12 @@ function vaultHandleMessage(event) {
     }
 }
 
+/** 
+ * Send a message to Zipper Vault
+ * @param {} Dictionary with the message to
+ * @return {Promise} that resolves with the response from the vault
+ */
+ 
 exports.message = function (message) {
      return new Promise(function(resolve, reject) {
          let id = "callback-" + _counter++
@@ -54,8 +60,14 @@ exports.message = function (message) {
      });
 };
 
+/** 
+ * Init the Zipper Vault communication
+ * @param { useOrigin: bool, testing: bool } Use origin to generate sub-identity. Testing uses localhost vault.
+ * @return {Promise} that resolves when the vault is ready for messaging
+ */
+ 
 exports.init = function (opts) {
-    opts = opts || { "useOrigin" : true };
+    opts = opts || { "useOrigin" : true, "testing" : false };
     return new Promise(
         function (resolve, reject) {
            window.addEventListener('message', vaultHandleMessage);
