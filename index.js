@@ -62,7 +62,7 @@ exports.message = function (message) {
 
 /** 
  * Init the Zipper Vault communication
- * @param {{useOrigin: bool, testing: bool} opts 'useOrigin' bool - use origin to generate sub-identity. 'testing' bool true uses localhost vault.
+ * @param {{useOrigin:bool,testing:bool}} opts 'useOrigin' bool - use origin to generate sub-identity. 'testing' bool true uses localhost vault.
  * @return {Promise} that resolves when the vault is ready for messaging
  */
  
