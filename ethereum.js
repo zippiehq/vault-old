@@ -30,8 +30,8 @@ var pmg = "https://enclave.zipperglobal.com/pmg";
 
 /**
  * Converts a secp256k1 signature in hex form into a Ethereum form v,r,s
- * @param {{signature: String, recovery: Number} the signature to convert
- * @return {{v: Number, r: String, s: String}}
+ * @param {{signature: String, recovery: Number} sig the signature to convert
+ * @return {{v: Number, r: String, s: String}} the Ethereum form signature
  */
 
 exports.toEthSig = function(sig) {
@@ -44,9 +44,9 @@ exports.toEthSig = function(sig) {
 
 /**
  * Converts a Ethereum style signature into secp256k1 form
- * @param {Number} v
- * @param {String} r
- * @param {String} s
+ * @param {Number} v part of Ethereum style signature, either 27 or 28
+ * @param {String} r part of Ethereum style signature, in hex form
+ * @param {String} s part of Ethereum style signature, in hex form
  * @return {{String, Number}} secp256k1 signature
  */
 
@@ -63,9 +63,9 @@ exports.fromEcSig = function(v,r,s) {
 
 /** 
  * Gets the particular Ethereum style address for the particular purpose and derivation
- * @param {vault} the Vault module
- * @param {String} the particular purpose, if normal, use 'auto'
- * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @param {vault} vault the Vault module
+ * @param {String} purpose the particular purpose, if normal, use 'auto'
+ * @param {String} purpose the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
  * @return {Promise} where resolve is the Ethereum style address
  */
  
@@ -80,10 +80,10 @@ exports.ethAddress = function(vault, purpose, derive) {
 
 /** 
  * Signs the particular msgHash in hex form with the private key of particular purpoes and derivation
- * @param {vault} the Vault module
- * @param {String} The hash (32 bytes in hex form) to be signed
- * @param {String} the particular purpose, if normal, use 'auto'
- * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @param {vault} vault the Vault module
+ * @param {String} msgHash The hash (32 bytes in hex form) to be signed
+ * @param {String} purpose the particular purpose, if normal, use 'auto'
+ * @param {String} derive the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
  * @return {Promise} where resolve is the Ethereum signature (v,r,s)
 */ 
  
@@ -98,11 +98,11 @@ exports.ecsign = function(vault, msgHash, purpose, derive) {
 
 /** 
  * Recovers the Ethereum address and public key of the particular Ethereum-style signature for a specific hash
- * @param {vault} the Vault module
- * @param {String} The hash (32 bytes in hex form) to be signed
- * @param {Number} v
- * @param {String} r
- * @param {String} s
+ * @param {vault} vault the Vault module
+ * @param {String} msgHash The hash (32 bytes in hex form) to be signed
+ * @param {Number} v the Ethereum-style signature part
+ * @param {String} r the Ethereum-style signature part, in hex form
+ * @param {String} s the Ethereum-style signature part, in hex form
  * @return {Promise} where the result is { ethAddress: Ethereum Address, pubkey: Public key }
 */
   
@@ -119,12 +119,12 @@ exports.ecrecover = function(vault, msgHash, v, r, s)  {
 
 /**
  * Send a transaction to a particular contract without paying ether
- * @param {vault} the Vault module
- * @param {String} the particular purpose, if normal, use 'auto'
- * @param {String} the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
- * @param {String} The Ethereum address of the smart contract to be called
- * @param {String} calldata of the call. First argument MUST be equal to ethAddress(vault, purpose, derive) or it will fail
- * @param {Boolean} if a event should be issued for the return value of the execution
+ * @param {vault} vault the Vault module
+ * @param {String} purpose the particular purpose, if normal, use 'auto'
+ * @param {String} derive the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @param {String} contract The Ethereum address of the smart contract to be called
+ * @param {String} calldata calldata of the call. First argument MUST be equal to ethAddress(vault, purpose, derive) or it will fail
+ * @param {Boolean} careReturn if a event should be issued for the return value of the execution
  * @return {Promise} where the resolve is the Ethereum blockchain transaction ID
  */
  

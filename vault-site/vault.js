@@ -49,11 +49,6 @@ var apphdkey = {};
 
 
 /* 
- * what does the vault contain?
- *   - 1/2 of the mnemonic
- *   - K for decrypting 2/2 (mnemonic + _device: + devicename)'s derived key 0
- *   - PBKDF2 hash for 2/2
- *   - the forgetme provider endpoint
  */
 
 function vaultInit(event)
@@ -126,7 +121,12 @@ function handleSecureVaultMessage(event)
          if (!inited)
           return;
 
-         if ('secp256k1SetupPurpose' in event.data)
+         if ('getAppID' in event.data)
+         {
+              var callback = event.data.callback;
+              parent.postMessage({'callback' : callback, 'appid' : apporigin}, event.origin);
+         }
+         else if ('secp256k1SetupPurpose' in event.data)
          {
               var callback = event.data.callback;
               var entropy = store.get('webseed');

@@ -6,11 +6,12 @@
   "scripts": {
     "build-vault": "mkdir -p build/vault; cp -f vault-site/index.html build/vault; browserify vault-site/vault.js -d -o build/vault/bundle.js",
     "build-test": "mkdir -p build/test; cp -f test-site/test.html build/test; browserify test-site/test.js -d -o build/test/test.built.js",
+    "build-docs": "mkdir -p docs; jsdoc -R README.md index.js -d docs; jsdoc -R ethereum.md ethereum.js -d docs/ethereum; jsdoc -R secp256k1.md secp256k1.js -d docs/secp256k1",
     "www": "cd build; python -m SimpleHTTPServer",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "AGPLv3+HTML exception",
+  "license": "MIT, AGPLv3+HTML exception",
   "dependencies": {
     "bip39": "^2.2.0",
     "bn.js": "^4.11.6",
@@ -24,6 +25,7 @@
     "web3": "^0.17.0-beta"
   },
   "devDependencies": {
-    "browserify": "^13.1.1"
+    "browserify": "^13.1.1",
+    "jsdoc": "^3.4.3"
   }
 }
