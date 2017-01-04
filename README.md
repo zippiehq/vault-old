@@ -1,8 +1,8 @@
 # Main module (index.js)
 
 The main module provides simple method for interacting directly with the
-vault, but it is recommended to use the [Ethereum](../docs/ethereum/index.html)
-or [secp256k1](../docs/secp256k1/index.html) modules directly.
+vault, but it is recommended to use the [Ethereum](https://zipperglobal.github.io/vault/ethereum/index.html)
+or [secp256k1](https://zipperglobal.github.io/vault/secp256k1/index.html) modules directly.
 
 The main module requires initialisation and is provided when calling into
 those modules. There's a 'testing' mode so you can develop offline.
@@ -55,7 +55,7 @@ $ npm run build-vault
 
 $ npm run build-test
 
-$ npm run build-docs
+$ npm run build-docs-private
 
 $ npm run www
 
