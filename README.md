@@ -1,15 +1,3 @@
-# Main module (index.js)
-
-The main module provides simple method for interacting directly with the
-vault, but it is recommended to use the [Ethereum](https://zipperglobal.github.io/vault/ethereum/index.html)
-or [secp256k1](https://zipperglobal.github.io/vault/secp256k1/index.html) modules directly.
-
-The main module requires initialisation and is provided when calling into
-those modules. There's a 'testing' mode so you can develop offline.
-
-This is the client modules for use on websites, licensed under MIT license. The 'server side' vault and it's
-code can be found in vault-site/ and is AGPLv3 licensed. 
-
 # Zipper vault
 
 Zipper Vault gives the end-user a digital identity, stored in their devices' web browsers, with no private data hosted on our company servers that:
@@ -41,7 +29,25 @@ Zipper Vault gives the end-user a digital identity, stored in their devices' web
 
 - The above can be leveraged to have additional types of attestations ('I certify that key X has this name') ('That key X has this facebook account") along with attestation revocations that empowers the end-user to leverage in business transactions or other scenarios.
 
+# Getting started using Vault APIs
 
+$ npm install zipperglobal/vault
+
+and in your .js:
+
+~~~~
+var vault = require('zipper-vault');
+var ethVault = require('zipper-vault/ethereum');
+var secp256k1Vault = require('zipper-vault/secp256k1');
+
+vault.init({ "useOrigin" : true }).then(function() { 
+    ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) {
+          console.log(pubkey); // the Ethereum address of the first derived public key
+    });    
+});
+~~~~
+
+And [see documentation here] (https://zipperglobal.github.io/vault/) for further ways to interact.
 
 # Contributions 
 
@@ -62,22 +68,3 @@ $ npm run www
 Open [http://localhost:8000/test/test.html](http://localhost:8000/test/test.html) and view output in console and
 check out test.js.
 
-# Getting started using Vault APIs
-
-$ npm install zipperglobal/vault
-
-and in your .js:
-
-~~~~
-var vault = require('zipper-vault');
-var ethVault = require('zipper-vault/ethereum');
-var secp256k1Vault = require('zipper-vault/secp256k1');
-
-vault.init({ "useOrigin" : true }).then(function() { 
-    ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) {
-          console.log(pubkey); // the Ethereum address of the first derived public key
-    });    
-});
-~~~~
-
-And see documentation at https://zipperglobal.github.io/vault/ for further ways to interact.
