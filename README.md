@@ -62,3 +62,18 @@ $ npm run www
 Open [http://localhost:8000/test/test.html](http://localhost:8000/test/test.html) and view output in console and
 check out test.js.
 
+# Getting started using Vault APIs
+
+$ npm install zipperglobal/vault
+
+and in your .js:
+
+var vault = require('zipper-vault');
+var ethVault = require('zipper-vault/ethereum');
+var secp256k1Vault = requuire('zipper-vault/secp256k1');
+
+vault.init({ "useOrigin" : true }).then(function() { 
+    ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) {
+          console.log(pubkey);
+    });    
+});
