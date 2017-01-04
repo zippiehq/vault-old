@@ -68,12 +68,16 @@ $ npm install zipperglobal/vault
 
 and in your .js:
 
+~~~~
 var vault = require('zipper-vault');
 var ethVault = require('zipper-vault/ethereum');
-var secp256k1Vault = requuire('zipper-vault/secp256k1');
+var secp256k1Vault = require('zipper-vault/secp256k1');
 
 vault.init({ "useOrigin" : true }).then(function() { 
     ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) {
-          console.log(pubkey);
+          console.log(pubkey); // the Ethereum address of the first derived public key
     });    
 });
+~~~~
+
+And see documentation at https://zipperglobal.github.io/vault/ for further ways to interact.
