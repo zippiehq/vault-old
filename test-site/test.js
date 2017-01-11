@@ -22,9 +22,21 @@ vault.init({ "useOrigin" : true, "testing" : true  }).then(function() {
                console.log(result);
            });
      });
+     secp256k1F.getProof(vault, 'auto', 'm/0', 'pub').then(function(result) {
+            console.log("Proof result: " + JSON.stringify(result));
+            secp256k1F.verifyProof(vault, result.signature, result.recovery, result.message).then(function(result) {
+               console.log("Verify result: " + JSON.stringify(result));
+            });
+     });
+
+     secp256k1F.getProof(vault, 'auto', 'm/0', 'pubex').then(function(result) {
+            console.log("Proof result: " + Buffer.from(result.message, 'hex').toString('utf8'));
+            secp256k1F.verifyProof(vault, result.signature, result.recovery, result.message).then(function(result) {
+               console.log("Verify result: " + JSON.stringify(result));
+            });
+     });
      ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) {
-      
-      ethVault.sendAuthedTransaction(vault, 'auto', 'm/0', authedforwarder.address, authedforwarder.test.getData("0x" + pubkey), true).then(function(result) {
+        ethVault.sendAuthedTransaction(vault, 'auto', 'm/0', authedforwarder.address, authedforwarder.test.getData("0x" + pubkey), true).then(function(result) {
           console.log("https://etherscan.io/tx/" + result);
       });
     });    

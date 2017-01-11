@@ -111,7 +111,7 @@ exports.decrypt = function(vault, purpose, derive, iv, ephemPublicKey, ciphertex
 /** 
  * Recovers the public key that signed a particular hash given the signature
  * @param {vault} vault the Vault module
- * @param {String} purpose the hex form signature
+ * @param {String} signature the hex form signature
  * @param {Number} recovery the recovery part of the signature
  * @param {String} hash the hash (32-bytes) that was signed
  * @return {Promise} a promise where the resolve is the public key that signed the signature
@@ -124,3 +124,40 @@ exports.recover = function(vault, signature, recovery, hash) {
   });
 }
 
+/** 
+ * Retrieves an attestation by vault that a particular public key or extended public key
+ * originates from a particular vault-guaranteed origin. If you share a pubex with untrusted parties, make sure to use
+ * hardened keys
+ *
+ * @param {vault} vault the Vault module
+ * @param {String} purpose the particular purpose, if normal, use 'auto'
+ * @param {String} derive the particular BIP32 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @param {String} proofType either 'pub' or 'pubex'
+ * @return {Promise} a promise that resolves to a dictionary of signature, recovery, message (hex format of the JSON attestation containing type/origin and the pub(ex)key itself)
+*/
+
+exports.getProof = function(vault, purpose, derive, proofType) {
+   return new Promise(function(resolve, reject) { 
+     vault.message({'secp256k1GetProof' : { key: { purpose: purpose, derive: derive }, 
+         proofType: proofType }}).then(function(result) {
+            resolve(result.result); 
+     });     
+   });
+}
+
+/** 
+ * Verifies an attestation was done by vault, that this message was signed by vault
+ * @param {Number} recovery the recovery part of the signature
+ * @param {vault} vault the Vault module
+ * @param {String} signature the hex form signature
+ * @param {String} the message in hex form
+ * @return {Promise} a promise that resolves to a boolean value if this attestation is valid
+ */
+
+exports.verifyProof = function(vault, signature, recovery, message) {
+   return new Promise(function(resolve, reject) { 
+     vault.message({'secp256k1VerifyProof' : { message: message, signature: signature, recovery: recovery }}).then(function(result) {
+            resolve(result.result);
+     });
+   });
+}

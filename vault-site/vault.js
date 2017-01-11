@@ -42,10 +42,11 @@ var bip39 = require('bip39');
 var store = require('store');
 var secp256k1 = require('secp256k1');
 var sessionstorage = require('sessionstorage');
-var createHash = require("crypto").createHash;
+var crypto = require('crypto');
 var eccrypto = require('eccrypto');
 var apporigin = null;
 var apphdkey = {};
+
 
 
 /* 
@@ -199,6 +200,53 @@ function handleSecureVaultMessage(event)
              senderPubKey = secp256k1.publicKeyConvert(senderPubKey, false);
 
              parent.postMessage({'callback' : callback, 'result' : senderPubKey.toString('hex')}, event.origin);
+         }
+         else if ('secp256k1GetProof' in event.data)
+         {
+             /* a proof is a attestation from the vault to another vault-using sign that this is indeed a pubex|pub from a particular origin */
+             
+             // purpose, derive
+             // sign with webseed + 'vault' + m/0/0/0
+             var callback = event.data.callback;
+             var from = apphdkey[event.data.secp256k1GetProof.key.purpose].derive(
+                  event.data.secp256k1GetProof.key.derive);
+             var proofData = null; 
+             if (event.data.secp256k1GetProof.proofType == 'pubex')
+                proofData = from.publicExtendedKey;
+             else if (event.data.secp256k1GetProof.proofType == 'pub')
+                proofData = from.publicKey;
+             
+             var message = Buffer.from(JSON.stringify({ type: event.data.secp256k1GetProof.proofType, data: proofData, origin: apporigin }));
+             var hash = crypto.createHash('sha256').update(message).digest();
+             
+             var entropy = store.get('webseed');
+             var seed2mnemonic = bip39.entropyToMnemonic(entropy);
+             
+             var seed = bip39.mnemonicToSeed(seed2mnemonic, 'attest');
+             var attestkey = hdkey.fromMasterSeed(seed).derive("m/0/0");
+             
+             var sig = secp256k1.sign(hash, attestkey.privateKey);            
+             
+             parent.postMessage({'callback' : callback, 'result' : { signature: sig.signature.toString('hex'), recovery: sig.recovery, message: message.toString('hex') }}, event.origin);
+         }
+         else if ('secp256k1VerifyProof' in event.data)
+         {
+             var callback = event.data.callback;   
+             
+             var message = Buffer.from(event.data.secp256k1VerifyProof.message, 'hex');
+             var hash = crypto.createHash('sha256').update(message).digest();
+
+             var signature = Buffer.from(event.data.secp256k1VerifyProof.signature, 'hex');
+             var recovery = event.data.secp256k1VerifyProof.recovery;
+             
+             var senderPubKey = secp256k1.recover(hash, signature, recovery);
+
+             var entropy = store.get('webseed');
+             var seed2mnemonic = bip39.entropyToMnemonic(entropy);
+             
+             var seed = bip39.mnemonicToSeed(seed2mnemonic, 'attest');
+             var attestkey = hdkey.fromMasterSeed(seed).derive("m/0/0");
+             parent.postMessage({'callback' : callback, 'result' : senderPubKey.compare(attestkey.publicKey) == 0}, event.origin);
          }
      }
      
