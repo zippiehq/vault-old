@@ -69,11 +69,11 @@ exports.fromEcSig = function(v,r,s) {
  * @return {Promise} where resolve is the Ethereum style address
  */
  
-exports.ethAddress = function(vault, purpose, derive) {
+exports.ethAddress = function(vault, purpose, derive, cacheResult = false) {
     return new Promise( 
         function (resolve, reject) {
-            vaultSecp256k1.keyInfo(vault, purpose, derive).then(function(address) {
-                resolve(ethutil.bufferToHex(ethutil.pubToAddress("0x" + address.slice(2))));
+            vaultSecp256k1.keyInfo(vault, purpose, derive, cacheResult).then(function(result) {
+                resolve(ethutil.bufferToHex(ethutil.pubToAddress("0x" + result.pubkey.slice(2))));
             }); 
     });
 }

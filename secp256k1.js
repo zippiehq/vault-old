@@ -19,34 +19,64 @@
  * SOFTWARE.
 */
 
+
+var store = require('store');
+
 /**  
  * Set up a new purpose for use in the following functions, accessible through a particular alias
  * @param {vault} vault the Vault module
  * @param {String} purpose the particular purpose to be aliased
  * @param {String} alias the particular alias to be made
- * @return {Promise} a promise that resolves when the alias is set up.
+ * @return {Promise} a promise that resolves when the alias is set up and rejects if the device is offline
  */
 
 exports.setupPurpose = function(vault, purpose, alias) {
    return new Promise(function(resolve, reject) { 
       vault.message({'secp256k1SetupPurpose' : { purpose: purpose, alias: alias }}).then(function(result) { 
-           resolve();
+           if (result == "offline")
+              reject();
+           else
+              resolve();
       });
    });
 }
 
 /** 
- * Get the public key for that particular purpose and derivation
+ * Get the public key and extended public key for that particular purpose and derivation
  * @param {vault} vault the Vault module
  * @param {String} purpose the particular purpose, if normal, use 'auto'
  * @param {String} derive the particular BIP32 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
- * @return {Promise} where resolve gets the public key
+ * @param {bool} cacheResult if to cache the result in local storage for offline use
+ * @return {Promise} where resolve gets the public key and public extended key in a dictionary
 */
 
-exports.keyInfo = function(vault, purpose, derive) {     
-   return new Promise(function(resolve, reject) { 
+exports.keyInfo = function(vault, purpose, derive, cacheResult = false) {     
+   return new Promise(function(resolve, reject) {
+     // XXX Need a way to invalidate cache in case vault changes user
+     var cache = store.get('vault:' + purpose + '/' + derive);
+     if (cache)
+         resolve(JSON.parse(cache));
+     
      vault.message({'secp256k1KeyInfo' : { key: { purpose: purpose, derive: derive } }}).then(function(result) { 
-          resolve(result.pubkey);
+          if (cacheResult)
+             store.set('vault:' + purpose + '/' + derive, JSON.stringify(result.result));
+          resolve(result.result);
+     });
+   });
+}
+
+/** 
+ * Derive a public extended key into a particular public key & public extended key
+ * @param {vault} vault the Vault module
+ * @param {String} pubex public extended key
+ * @param {String} derive the particular BIP32 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @return {Promise} where resolve gets the public key and public extended key in a dictionary
+*/
+
+exports.derive = function(vault, pubex, derive) {
+   return new Promise(function(resolve, reject) {
+     vault.message({'secp256k1Derive' : { key: { pubex: pubex, derive: derive } }}).then(function(result) { 
+          resolve(result.result);
      });
    });
 }

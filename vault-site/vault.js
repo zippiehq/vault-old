@@ -47,8 +47,6 @@ var eccrypto = require('eccrypto');
 var apporigin = null;
 var apphdkey = {};
 
-
-
 /* 
  */
 
@@ -56,18 +54,6 @@ function vaultInit(event)
 {
      var callback = event.data.callback;
      // do we even have anything in our vault right now?
-     if (store.get('vaultSetup') == null)
-     {
-         console.log("No identity found, create a new mnemonic");
-         var mnemonic = bip39.generateMnemonic();
-         
-         var seed = bip39.mnemonicToSeed(mnemonic, "web:");
-         // will be removed and split when there's multiple devices
-         store.set('mnemonic', mnemonic);
-         store.set('webseed', seed);
-         store.set('vaultSetup', 1); // version number
-     }
-
      // the above will eventually get replaced with forget-me mnenomic fetching
      
      // Add ability to ask for hardened mnemonic for particular apps needing extra security at expense at some processing
@@ -93,12 +79,6 @@ function vaultInit(event)
         }
      }
      
-     var entropy = store.get('webseed');
-     var seed2mnemonic = bip39.entropyToMnemonic(entropy);
-
-     var seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin);
-     apphdkey['auto'] = hdkey.fromMasterSeed(seed); // this hdkey is now specific to the app origin
-
      parent.postMessage({'callback' : callback, 'result' : 'inited'}, event.origin);     
      // should page-relevant stuff in digital self be encrypted with the page app url/id? hashed?
      // does this app already have an identity key? else assign it one and send it to app
@@ -106,6 +86,24 @@ function vaultInit(event)
 }
 
 var inited = false;
+
+function getWebseedMnemonic()
+{
+     if (store.get('vaultSetup') == null)
+     {
+         console.log("No identity found, create a new mnemonic");
+         var mnemonic = bip39.generateMnemonic();
+         
+         var seed = bip39.mnemonicToSeed(mnemonic, "web:");
+         // will be removed and split when there's multiple devices
+         store.set('mnemonic', mnemonic);
+         store.set('webseed', seed);
+         store.set('vaultSetup', 1); // version number
+     }
+
+     var entropy = store.get('webseed');
+     return bip39.entropyToMnemonic(entropy);
+}
 
 function handleSecureVaultMessage(event)
 {
@@ -120,7 +118,7 @@ function handleSecureVaultMessage(event)
          }
 
          if (!inited)
-          return;
+             return;
 
          if ('getAppID' in event.data)
          {
@@ -130,12 +128,22 @@ function handleSecureVaultMessage(event)
          else if ('secp256k1SetupPurpose' in event.data)
          {
               var callback = event.data.callback;
-              var entropy = store.get('webseed');
-              var seed2mnemonic = bip39.entropyToMnemonic(entropy);
               
-              var seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin + "purpose" + event.data.secp256k1SetupPurpose.purpose);
+              var seed2mnemonic = getWebseedMnemonic();
+              if (seed2mnemonic == null)
+              {
+                  parent.postMessage({'callback' : callback, 'result' : 'offline'}, event.origin);
+              }
+
+              var seed;
+              
+              if (event.data.secp256k1SetupPurpose.purpose == 'auto')
+                  seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin);
+              else
+                  seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin + "purpose" + event.data.secp256k1SetupPurpose.purpose);
+
               apphdkey[event.data.secp256k1SetupPurpose.alias] = hdkey.fromMasterSeed(seed);
-              parent.postMessage({'callback' : callback}, event.origin);
+              parent.postMessage({'callback' : callback, 'result' : 'online'}, event.origin);
          }
          // get the ethereum address for a particular sub-account
          else if ('secp256k1KeyInfo' in event.data)
@@ -147,7 +155,17 @@ function handleSecureVaultMessage(event)
                   event.data.secp256k1KeyInfo.key.derive);
              var pubkey = secp256k1.publicKeyConvert(ahdkey.publicKey, false);
              // give back SEC1 form
-             parent.postMessage({'callback' : callback, 'pubkey' : pubkey.toString('hex') }, event.origin);
+             parent.postMessage({'callback' : callback, 'result' : { 'pubkey' : pubkey.toString('hex'), 'pubex' : ahdkey.publicExtendedKey }}, event.origin);
+         }
+         else if ('secp256k1Derive' in event.data)
+         {
+             var callback = event.data.callback;
+             // we use other children for other things for now
+             var ahdkey = hdkey.fromExtendedKey(event.data.secp256k1Derive.key.pubex).derive(
+                  event.data.secp256k1Derive.key.derive);
+             var pubkey = secp256k1.publicKeyConvert(ahdkey.publicKey, false);
+             // give back SEC1 form
+             parent.postMessage({'callback' : callback, 'result' : { 'pubkey' : pubkey.toString('hex'), 'pubex' : ahdkey.publicExtendedKey }}, event.origin);
          }
          else if ('secp256k1Encrypt' in event.data)
          {
@@ -219,8 +237,7 @@ function handleSecureVaultMessage(event)
              var message = Buffer.from(JSON.stringify({ type: event.data.secp256k1GetProof.proofType, data: proofData, origin: apporigin }));
              var hash = crypto.createHash('sha256').update(message).digest();
              
-             var entropy = store.get('webseed');
-             var seed2mnemonic = bip39.entropyToMnemonic(entropy);
+             var seed2mnemonic = getWebseedMnemonic();
              
              var seed = bip39.mnemonicToSeed(seed2mnemonic, 'attest');
              var attestkey = hdkey.fromMasterSeed(seed).derive("m/0/0");
@@ -241,9 +258,7 @@ function handleSecureVaultMessage(event)
              
              var senderPubKey = secp256k1.recover(hash, signature, recovery);
 
-             var entropy = store.get('webseed');
-             var seed2mnemonic = bip39.entropyToMnemonic(entropy);
-             
+             var seed2mnemonic = getWebseedMnemonic();
              var seed = bip39.mnemonicToSeed(seed2mnemonic, 'attest');
              var attestkey = hdkey.fromMasterSeed(seed).derive("m/0/0");
              parent.postMessage({'callback' : callback, 'result' : senderPubKey.compare(attestkey.publicKey) == 0}, event.origin);
