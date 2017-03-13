@@ -25,9 +25,6 @@ var BN = require('bn.js');
 
 var vaultSecp256k1 = require ('./secp256k1.js');
 
-var authedForwarder = "0xf8260e2729e5f618005dc011a36d699bd2e53055";
-var pmg = "https://enclave.zipperglobal.com/pmg";
-
 /**
  * Converts a secp256k1 signature in hex form into a Ethereum form v,r,s
  * @param {{signature: String, recovery: Number} sig the signature to convert
@@ -128,7 +125,7 @@ exports.ecrecover = function(vault, msgHash, v, r, s)  {
  * @return {Promise} where the resolve is the Ethereum blockchain transaction ID
  */
  
-exports.sendAuthedTransaction = function(vault, purpose, derive, contract, calldata, careReturn)
+exports.sendAuthedTransaction = function(vault, purpose, derive, contract, calldata, careReturn, pmg="https://enclave.zipperglobal.com/pmg", authedForwarder="0xf8260e2729e5f618005dc011a36d699bd2e53055")
 {
     return new Promise(
         function(resolve, reject) {
