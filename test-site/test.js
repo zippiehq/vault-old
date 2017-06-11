@@ -2,6 +2,7 @@
 var vault = require('../index.js');
 var ethVault = require('../ethereum.js');
 var Web3 = require('web3');
+var ethereumTx = require('ethereumjs-tx');
 var web3 = new Web3();
 var secp256k1F = require('../secp256k1.js');
 
@@ -23,12 +24,31 @@ vault.init({ "useOrigin" : true, "testing" : true  }).then(function() {
       ethVault.ethAddress(vault, 'auto', 'm/0').then(function(pubkey) { console.log(pubkey); });    
       ethVault.ethAddress(vault, 'auto', 'm/1').then(function(pubkey) { console.log(pubkey); });    
       ethVault.ethAddress(vault, 'auto', 'm/2').then(function(pubkey) { console.log(pubkey); });    
+      
       ethVault.ecsign(vault, "0123456789012345678901234567890123456789012345678901234567890101", 'auto', 'm/0').then(function(sig) {
             console.log(sig);
             ethVault.ecrecover(vault, "0123456789012345678901234567890123456789012345678901234567890101", sig.v, sig.r, sig.s).then(function(result) {
                 console.log(result);
             });
       });
+      
+      const txParams = {
+        nonce: '0x00',
+        gasPrice: '0x09184e72a000', 
+        gasLimit: '0x2710',
+        to: '0x0000000000000000000000000000000000000000', 
+        value: '0x00', 
+        data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
+        // EIP 155 chainId - mainnet: 1, ropsten: 3
+        chainId: 3
+      }
+      const tx = new ethereumTx(txParams);
+      ethVault.signEthTransaction(vault, tx, "auto", "m/0").then(function(tx) {
+           console.log("signed tx serialized " + tx.serialize().toString('hex'));
+           console.log("tx verificated sig " + tx.verifySignature());
+           console.log("tx sender address " + tx.getSenderAddress().toString('hex'));
+      });
+      
       secp256k1F.getProof(vault, 'auto', 'm/0', 'pub').then(function(result) {
              console.log("Proof result: " + JSON.stringify(result));
              secp256k1F.verifyProof(vault, result.signature, result.recovery, result.message).then(function(result) {

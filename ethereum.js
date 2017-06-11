@@ -115,6 +115,33 @@ exports.ecrecover = function(vault, msgHash, v, r, s)  {
 }
 
 /**
+ * Signs an ethereumjs-tx style transaction with vault
+ * 
+ * @param {vault} vault the Vault module
+ * @param {Transaction} tx the transaction to be signed
+ * @param {String} purpose the particular purpose, if normal, use 'auto'
+ * @param {String} derive the particular BIP39 derivation, see https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+ * @return {Promise} where resolve is the signed Ethereum tx
+*/
+exports.signEthTransaction = function(vault, tx, purpose, derive) {
+    return new Promise(
+        function (resolve, reject) {
+            vaultSecp256k1.sign(vault, purpose, derive, tx.hash(false).toString('hex')).then(function(result) { 
+               var sig = exports.toEthSig(result);
+               sig.r = Buffer.from(sig.r, 'hex');
+               sig.s = Buffer.from(sig.s, 'hex');
+               if (tx._chainId > 0) {
+                  sig.v += tx._chainId * 2 + 8;
+               }
+               Object.assign(tx, sig);
+               resolve(tx);
+            });             
+        }
+    );
+}
+
+
+/**
  * Send a transaction to a particular contract without paying ether
  * @param {vault} vault the Vault module
  * @param {String} purpose the particular purpose, if normal, use 'auto'
