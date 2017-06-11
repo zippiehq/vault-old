@@ -89,20 +89,19 @@ var inited = false;
 
 function getWebseedMnemonic()
 {
+     if (store.get('vaultSetup') != null && store.get('vaultSetup') == 1)
+     {
+        console.log("Reseting identity. Webseed is still backed up.");
+        store.set('vaultSetup', null);
+     }
      if (store.get('vaultSetup') == null)
      {
          console.log("No identity found, create a new mnemonic");
          var mnemonic = bip39.generateMnemonic();
-         
-         var seed = bip39.mnemonicToSeed(mnemonic, "web:");
-         // will be removed and split when there's multiple devices
          store.set('mnemonic', mnemonic);
-         store.set('webseed', seed);
-         store.set('vaultSetup', 1); // version number
+         store.set('vaultSetup', 2); // version number
      }
-
-     var entropy = store.get('webseed');
-     return bip39.entropyToMnemonic(entropy);
+     return store.get('mnemonic');
 }
 
 function handleSecureVaultMessage(event)
@@ -138,9 +137,9 @@ function handleSecureVaultMessage(event)
               var seed;
               
               if (event.data.secp256k1SetupPurpose.purpose == 'auto')
-                  seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin);
+                  seed = bip39.mnemonicToSeed(seed2mnemonic, "web:" + apporigin);
               else
-                  seed = bip39.mnemonicToSeed(seed2mnemonic, apporigin + "purpose" + event.data.secp256k1SetupPurpose.purpose);
+                  seed = bip39.mnemonicToSeed(seed2mnemonic, "web:" + apporigin + "purpose" + event.data.secp256k1SetupPurpose.purpose);
 
               apphdkey[event.data.secp256k1SetupPurpose.alias] = hdkey.fromMasterSeed(seed);
               parent.postMessage({'callback' : callback, 'result' : 'online'}, event.origin);
